@@ -3,7 +3,7 @@ import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { EventFormData, ProposalResponse } from "../types";
 import { calculateQuoteDetails } from "./pricingCalculator";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 const menuSchema: Schema = {
   type: Type.OBJECT,
