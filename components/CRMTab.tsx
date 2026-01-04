@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { SavedEvent, LeadActivity, LeadTask } from '../types';
+import { SavedEvent, LeadActivity, LeadTask, SERVING_STYLES, FOOD_STYLES, EVENT_ORDERS } from '../types';
 import { LeadManagementModal, ScheduleMeetingModal } from './LeadManagementModal';
 import { generateProposal } from '../services/geminiService';
 
@@ -24,6 +24,111 @@ const LOST_REASONS = [
     "כוח עליון",
     "אחר"
 ];
+
+// --- New Lead Modal Component ---
+const NewLeadModal: React.FC<{ 
+    onClose: () => void; 
+    onSave: (data: Partial<SavedEvent>) => void 
+}> = ({ onClose, onSave }) => {
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [date, setDate] = useState('');
+    const [guests, setGuests] = useState<number>(50);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name) return;
+        
+        onSave({
+            customerName: name,
+            phone,
+            eventDate: date || new Date().toISOString(),
+            guests,
+            status: 'פנייה ראשונית',
+            // Default Fallbacks
+            eventType: SERVING_STYLES[0],
+            foodStyle: FOOD_STYLES[0],
+            eventOrder: EVENT_ORDERS[0],
+            eventClass: guests > 200 ? 'large' : (guests > 100 ? 'medium' : 'small'),
+            kosherType: 'none',
+            distanceType: 'close',
+            includeClearing: false,
+            dreamItems: [],
+            tasks: [],
+            activities: [{
+                id: crypto.randomUUID(),
+                type: 'system',
+                content: 'ליד נוצר ידנית במערכת',
+                timestamp: new Date().toISOString(),
+                author: 'משתמש'
+            }]
+        });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={onClose}></div>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm z-10 p-6 animate-fade-in-up">
+                <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-teal-800">יצירת ליד חדש</h3>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold">✕</button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-stone-500 mb-1">שם הלקוח <span className="text-red-500">*</span></label>
+                        <input 
+                            required
+                            type="text" 
+                            className="w-full border border-stone-200 rounded-lg p-2 text-sm focus:border-teal-500 outline-none" 
+                            value={name} 
+                            onChange={e => setName(e.target.value)}
+                            placeholder="למשל: דני ורונה"
+                            autoFocus
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-stone-500 mb-1">טלפון</label>
+                        <input 
+                            type="text" 
+                            className="w-full border border-stone-200 rounded-lg p-2 text-sm focus:border-teal-500 outline-none" 
+                            value={phone} 
+                            onChange={e => setPhone(e.target.value)}
+                            placeholder="050-0000000"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-stone-500 mb-1">תאריך אירוע (משוער)</label>
+                        <input 
+                            type="date" 
+                            className="w-full border border-stone-200 rounded-lg p-2 text-sm focus:border-teal-500 outline-none" 
+                            value={date} 
+                            onChange={e => setDate(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-stone-500 mb-1">כמות אורחים</label>
+                        <input 
+                            type="number" 
+                            min="10"
+                            className="w-full border border-stone-200 rounded-lg p-2 text-sm focus:border-teal-500 outline-none" 
+                            value={guests} 
+                            onChange={e => setGuests(parseInt(e.target.value) || 0)}
+                        />
+                    </div>
+                    
+                    <button 
+                        type="submit"
+                        className="w-full bg-teal-600 text-white py-2.5 rounded-lg font-bold shadow-md hover:bg-teal-700 transition mt-2"
+                    >
+                        צור ליד
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
 
 // --- Sub-Components ---
 
@@ -265,10 +370,11 @@ const CRMTab: React.FC<CRMTabProps> = ({ events, onAddEvent, onUpdateEvent }) =>
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedLead, setSelectedLead] = useState<SavedEvent | null>(null);
     const [scheduleLead, setScheduleLead] = useState<SavedEvent | null>(null);
-    const [leadToArchive, setLeadToArchive] = useState<SavedEvent | null>(null); // New state for archiving
+    const [leadToArchive, setLeadToArchive] = useState<SavedEvent | null>(null);
     const [isGeneratingMenu, setIsGeneratingMenu] = useState<string | null>(null);
     const [activeFollowUpMenuId, setActiveFollowUpMenuId] = useState<string | null>(null);
     const [modalInitialTab, setModalInitialTab] = useState<'intro' | 'docs' | 'tasks' | 'menu'>('intro');
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // Drag and Drop state
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
@@ -386,6 +492,16 @@ const CRMTab: React.FC<CRMTabProps> = ({ events, onAddEvent, onUpdateEvent }) =>
         setLeadToArchive(null);
     };
 
+    const handleAddNewLead = (data: Partial<SavedEvent>) => {
+        const newEvent: SavedEvent = {
+            id: crypto.randomUUID(),
+            createdAt: new Date().toISOString(),
+            ...data
+        } as SavedEvent;
+        
+        onAddEvent(newEvent);
+    };
+
     // --- Render ---
     return (
         <div className="h-full flex flex-col pb-20 md:pb-0" onClick={() => setActiveFollowUpMenuId(null)}>
@@ -406,7 +522,13 @@ const CRMTab: React.FC<CRMTabProps> = ({ events, onAddEvent, onUpdateEvent }) =>
                     </div>
                 </div>
                 
-                {/* Stats / Actions could go here */}
+                <button 
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl font-bold shadow-md flex items-center gap-2 transition"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    ליד חדש
+                </button>
             </div>
 
             {/* Kanban Board */}
@@ -487,6 +609,14 @@ const CRMTab: React.FC<CRMTabProps> = ({ events, onAddEvent, onUpdateEvent }) =>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* New Lead Modal */}
+            {showAddModal && (
+                <NewLeadModal 
+                    onClose={() => setShowAddModal(false)}
+                    onSave={handleAddNewLead}
+                />
             )}
 
             {/* Modals */}

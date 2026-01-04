@@ -6,248 +6,32 @@ import OperationsTab from './components/OperationsTab';
 import TimelineTab from './components/TimelineTab';
 import FinanceTab from './components/FinanceTab';
 import LoginPage from './components/LoginPage';
-import { SavedEvent, Tab, SERVING_STYLES, FOOD_STYLES, EVENT_ORDERS, User, Role } from './types';
-
-// Mock initial data
-const INITIAL_EVENTS: SavedEvent[] = [
-  {
-    id: '1003',
-    customerName: 'יובל ואלון',
-    eventDate: new Date(Date.now() + 86400000 * 5).toISOString(),
-    guests: 60,
-    eventType: SERVING_STYLES[2], // Station Bites
-    dietaryPreferences: 'ללא גלוטן חובה',
-    status: 'סגור',
-    totalPrice: 23400,
-    createdAt: new Date(Date.now() - 86400000 * 20).toISOString(),
-    phone: '050-9876543',
-    email: 'yuval@example.com',
-    leadSource: 'המלצה מלקוח',
-    location: 'חוות דרך ארץ',
-    introCall: 'סיכום_שיחה_יובל.pdf',
-    lastCallSummary: 'שיחת סגירה, היו מרוצים מאוד מהטעימות.',
-    followUpDate: '', 
-    notes: 'ביקשו להקדים את שעת ההגעה של הצוות ב-30 דקות.',
-    isClosed: true,
-    isSigned: true,
-    proposalLink: 'הצעת_מחיר_סופית.pdf',
-    pricePerHead: 390,
-    isPriceVerified: true,
-    estimatedCost: 16500,
-    costBreakdown: { food: 6000, labor: 6000, equipment: 3000, logistics: 1500 },
-    actualCostBreakdown: { food: 6200, labor: 6000, equipment: 2800, logistics: 1600 },
-    debriefNotes: 'האירוע היה מוצלח מאוד. חרגנו מעט בירקות (200 ש"ח) בגלל השלמות ברגע האחרון. הציוד היה בול.',
-    paymentStatus: 'שולם מלא',
-    extrasDescription: 'הגברה ותאורה בסיסית',
-    extrasCost: 1500,
-    eventClass: 'small',
-    kosherType: 'none',
-    distanceType: 'close',
-    foodStyle: FOOD_STYLES[0],
-    eventOrder: EVENT_ORDERS[2],
-    includeClearing: true,
-    dreamItems: [],
-    tasks: [],
-    activities: [
-      { id: '1', type: 'status_change', content: 'האירוע בוצע בהצלחה', timestamp: new Date(Date.now() - 86400000).toISOString(), author: 'System' }
-    ],
-    operationalStatus: {
-        menuFinalized: true,
-        staffArranged: true,
-        equipmentOrdered: true,
-        vehiclesArranged: true,
-        foodOrdered: true
-    }
-  },
-  {
-    id: '1004',
-    customerName: 'יותם ונגה',
-    eventDate: new Date(Date.now() + 86400000 * 14).toISOString(),
-    guests: 120,
-    eventType: SERVING_STYLES[3], // Walking Bites
-    dietaryPreferences: 'אופציות טבעוניות',
-    status: 'אחרי שיחת היכרות',
-    totalPrice: 42000,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    phone: '054-8346180',
-    additionalPhone: '052-1111111',
-    email: 'yotam.g@gmail.com',
-    leadSource: 'אינסטגרם',
-    campaignName: 'קמפיין חתונות חורף',
-    location: 'בית פרטי במושב עופר',
-    introCall: 'טופס_היכרות_יותם.docx',
-    lastCallSummary: 'ביקשו הצעה נוספת עם תפריט חורפי יותר.',
-    followUpDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-    notes: 'רגישות לאגוזים לכלה.',
-    isClosed: false,
-    proposalLink: '',
-    pricePerHead: 350,
-    estimatedCost: 28000,
-    costBreakdown: { food: 10000, labor: 10000, equipment: 5000, logistics: 3000 },
-    paymentStatus: 'טרם שולם',
-    lostReason: '',
-    eventClass: 'medium',
-    kosherType: 'none',
-    distanceType: 'far',
-    foodStyle: FOOD_STYLES[1], // Vegan
-    eventOrder: EVENT_ORDERS[0],
-    includeClearing: false,
-    dreamItems: [],
-    tasks: [
-      { id: 't1', title: 'להכין הצעה מתוקנת', isCompleted: false, dueDate: new Date(Date.now() + 86400000).toISOString() },
-      { id: 't2', title: 'לתאם טעימות', isCompleted: false }
-    ],
-    activities: [
-      { id: 'a1', type: 'email', content: 'נשלחה הצעה ראשונית במייל', timestamp: new Date(Date.now() - 86400000 * 2).toISOString(), author: 'System' },
-      { id: 'a2', type: 'call', content: 'שיחת טלפון: ביקשו לשנות את כמות המלצרים', timestamp: new Date(Date.now() - 86400000).toISOString(), author: 'אורן' }
-    ]
-  },
-  {
-    id: '1005',
-    customerName: 'דנה ואלון',
-    eventDate: new Date(Date.now() + 86400000 * 60).toISOString(),
-    guests: 350,
-    eventType: SERVING_STYLES[0], // Buffet
-    dietaryPreferences: 'גלאט כשר',
-    status: 'לא רלוונטי',
-    totalPrice: 101500,
-    createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
-    phone: '052-1234567',
-    email: 'dana123@walla.co.il',
-    leadSource: 'גוגל',
-    location: 'אולם האירועים שדות',
-    introCall: '',
-    lastCallSummary: 'החליטו ללכת על קייטרינג של האולם עצמו.',
-    isClosed: false,
-    proposalLink: 'הצעה_ראשונית.pdf',
-    lostReason: 'מחיר - יקר עבורם',
-    estimatedCost: 75000,
-    costBreakdown: { food: 30000, labor: 25000, equipment: 15000, logistics: 5000 },
-    paymentStatus: 'טרם שולם',
-    eventClass: 'large',
-    kosherType: 'certificate',
-    distanceType: 'close',
-    foodStyle: FOOD_STYLES[4] || FOOD_STYLES[0], // Corrected index/fallback
-    eventOrder: EVENT_ORDERS[2],
-    includeClearing: true,
-    dreamItems: [],
-    tasks: [],
-    activities: [
-       { id: 'a3', type: 'status_change', content: 'הליד הועבר לסטטוס לא רלוונטי', timestamp: new Date(Date.now()).toISOString(), author: 'System' }
-    ]
-  },
-  {
-    id: '1006',
-    customerName: 'שוח ואופיר',
-    eventDate: new Date(Date.now() + 86400000 * 200).toISOString(),
-    guests: 500,
-    eventType: SERVING_STYLES[0], // Buffet
-    dietaryPreferences: '',
-    status: 'פנייה ראשונית',
-    totalPrice: 0,
-    createdAt: new Date(Date.now()).toISOString(),
-    phone: '053-1112222',
-    email: 'shuh@startupp.io',
-    leadSource: 'פייסבוק',
-    campaignName: 'קמפיין קיץ 2025',
-    location: 'יער בן שמן',
-    introCall: '',
-    lastCallSummary: '',
-    followUpDate: new Date(Date.now() + 86400000 * 1).toISOString(),
-    notes: '',
-    isClosed: false,
-    proposalLink: '',
-    lostReason: '',
-    paymentStatus: 'טרם שולם',
-    eventClass: 'large',
-    kosherType: 'none',
-    distanceType: 'special',
-    foodStyle: FOOD_STYLES[0],
-    eventOrder: EVENT_ORDERS[1],
-    includeClearing: false,
-    dreamItems: [],
-    tasks: [
-      { id: 't3', title: 'לחזור אליהם לתיאום פגישה', isCompleted: false, dueDate: new Date(Date.now() + 86400000).toISOString() }
-    ],
-    activities: []
-  },
-  {
-    id: '1007',
-    customerName: 'רוני ודניאל',
-    eventDate: new Date(Date.now() + 86400000 * 45).toISOString(),
-    guests: 80,
-    eventType: SERVING_STYLES[1], 
-    dietaryPreferences: '',
-    status: 'קיבלו הצעת מחיר',
-    totalPrice: 32000,
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    phone: '050-1239876',
-    leadSource: 'המלצה מלקוח',
-    location: '',
-    introCall: '',
-    lastCallSummary: '',
-    isClosed: false,
-    proposalLink: 'הצעה.pdf',
-    pricePerHead: 400,
-    estimatedCost: 20000,
-    costBreakdown: { food: 8000, labor: 6000, equipment: 4000, logistics: 2000 },
-    paymentStatus: 'טרם שולם',
-    eventClass: 'small',
-    kosherType: 'none',
-    distanceType: 'close',
-    foodStyle: FOOD_STYLES[0],
-    eventOrder: EVENT_ORDERS[0],
-    includeClearing: false,
-    dreamItems: [],
-    tasks: [
-        { id: 't4', title: 'לוודא קבלת הצעה', isCompleted: false }
-    ],
-    activities: []
-  },
-  {
-    id: '1008',
-    customerName: 'מאיה ויובל',
-    eventDate: new Date(Date.now() + 86400000 * 10).toISOString(),
-    guests: 150,
-    eventType: SERVING_STYLES[0],
-    dietaryPreferences: '',
-    status: 'ממתין להעברת מקדמה',
-    totalPrice: 55000,
-    createdAt: new Date(Date.now() - 86400000 * 15).toISOString(),
-    phone: '052-9998887',
-    leadSource: 'אינסטגרם',
-    location: '',
-    introCall: '',
-    lastCallSummary: 'סיכמנו על תפריט סופי, מחכים למקדמה כדי לשריין תאריך.',
-    isClosed: false,
-    proposalLink: 'הצעה_סופית.pdf',
-    pricePerHead: 366,
-    estimatedCost: 35000,
-    costBreakdown: { food: 15000, labor: 10000, equipment: 7000, logistics: 3000 },
-    paymentStatus: 'טרם שולם',
-    eventClass: 'medium',
-    kosherType: 'none',
-    distanceType: 'close',
-    foodStyle: FOOD_STYLES[0],
-    eventOrder: EVENT_ORDERS[0],
-    includeClearing: false,
-    dreamItems: [],
-    tasks: [],
-    activities: []
-  }
-];
+import { SavedEvent, Tab, User } from './types';
+import { checkSupabaseConnection, fetchEvents, createEvent, updateEvent } from './services/supabaseClient';
 
 const App: React.FC = () => {
   // Auth State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Tabs logic dependent on Auth, so it moved inside
+  // Tabs logic dependent on Auth
   const [activeTab, setActiveTab] = useState<Tab>('proposal');
   
-  // Events State with History
-  const [events, setEvents] = useState<SavedEvent[]>(INITIAL_EVENTS);
-  const [history, setHistory] = useState<SavedEvent[][]>([]);
+  // Events State
+  const [events, setEvents] = useState<SavedEvent[]>([]);
+  const [history, setHistory] = useState<SavedEvent[][]>([]); // Keeping history for session undo
   const [isSaving, setIsSaving] = useState(false);
+
+  // Initial Data Load from Supabase
+  useEffect(() => {
+    const loadData = async () => {
+        const connected = await checkSupabaseConnection();
+        if (connected) {
+            const data = await fetchEvents();
+            setEvents(data);
+        }
+    };
+    loadData();
+  }, []);
 
   // Determine Default Tab on Login
   useEffect(() => {
@@ -258,42 +42,57 @@ const App: React.FC = () => {
       }
   }, [currentUser]);
 
-  // Helper to save state with history and visual feedback
-  const saveEventsWithHistory = useCallback((newEvents: SavedEvent[]) => {
-      // 1. Push current state to history
-      setHistory(prev => {
-          const newHistory = [...prev, events];
-          // Limit history size if needed, e.g., last 20 steps
-          if (newHistory.length > 20) return newHistory.slice(1);
-          return newHistory;
-      });
-
-      // 2. Update State
-      setEvents(newEvents);
-
-      // 3. Show Save Indication
+  // UI Helper for "Saved" indicator
+  const triggerSaveIndicator = () => {
       setIsSaving(true);
       setTimeout(() => setIsSaving(false), 2000);
-  }, [events]);
+  };
 
+  // Add Event (Persist to DB)
+  const handleAddEvent = async (newEvent: SavedEvent) => {
+    // 1. Optimistic Update
+    const prevEvents = [...events];
+    setEvents([newEvent, ...prevEvents]);
+    setHistory(prev => [[...prevEvents], ...prev].slice(0, 10)); // Save history
+
+    // 2. DB Update
+    triggerSaveIndicator();
+    const saved = await createEvent(newEvent);
+    
+    if (!saved) {
+        alert('שגיאה בשמירת האירוע בשרת. הנתונים מוצגים מקומית בלבד.');
+        // Optional: rollback logic could go here
+    }
+  };
+
+  // Update Event (Persist to DB)
+  const handleUpdateEvent = async (updatedEvent: SavedEvent) => {
+    // 1. Optimistic Update
+    const prevEvents = [...events];
+    const newEvents = events.map(e => e.id === updatedEvent.id ? updatedEvent : e);
+    setEvents(newEvents);
+    setHistory(prev => [[...prevEvents], ...prev].slice(0, 10));
+
+    // 2. DB Update
+    triggerSaveIndicator();
+    const saved = await updateEvent(updatedEvent);
+    
+    if (!saved) {
+         console.error('Failed to update event in DB');
+         // We might want to alert the user or show a red indicator
+    }
+  };
+
+  // Undo (Local Session Only)
   const handleUndo = () => {
       if (history.length === 0) return;
-      
-      const previousState = history[history.length - 1];
-      setHistory(prev => prev.slice(0, -1));
+      const previousState = history[0];
+      setHistory(prev => prev.slice(1));
       setEvents(previousState);
-      
-      // Optional: Visual feedback for undo
-      setIsSaving(true);
-      setTimeout(() => setIsSaving(false), 2000);
-  };
-
-  const handleAddEvent = (newEvent: SavedEvent) => {
-    saveEventsWithHistory([newEvent, ...events]);
-  };
-
-  const handleUpdateEvent = (updatedEvent: SavedEvent) => {
-    saveEventsWithHistory(events.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+      // Note: Reverting DB state for Undo is complex and risky, so we keep Undo local for UI mistakes 
+      // within the session, acknowledging it might desync from DB until refresh. 
+      // Ideally, we'd issue DB updates for the undo as well, but for this MVP simplicity:
+      alert("פעולת ביטול משחזרת מצב מקומי בלבד. שינויים בשרת עשויים להישמר.");
   };
 
   // Nav Item Data - with Role Filtering
